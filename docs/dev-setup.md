@@ -196,7 +196,7 @@ C# Dev Kit gives Solution Explorer, IntelliSense, Test Explorer and debugging. S
 
 ### 11. Config files and secrets
 
-- [ ] Commit a **sample** client config (for example `Client/client-config.example.json`) with the directory list, client ID and scan interval (hours), using fake values.
+- [ ] Commit a **sample** client config (for example `Client/client-config.example.json`) with the directory list, client ID and scan interval (minutes), using fake values.
 - [ ] Each person copies it to their real config locally. Real configs, client keys and certs are **never** committed.
 - [ ] For the server, use `dotnet user-secrets` for anything secret during development:
   - `dotnet user-secrets init --project Server`

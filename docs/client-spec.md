@@ -9,7 +9,7 @@ JSON, path given as the first argument (default `client-config.json`). Commit on
 ```json
 {
   "clientId": "lab-pc-07",
-  "scanIntervalHours": 6,
+  "scanIntervalMinutes": 360,
   "directories": [ "C:\\Data\\Important", "D:\\Records" ],
   "outputDir": "C:\\ProgramData\\FIM\\scans",
   "logPath": "C:\\ProgramData\\FIM\\client.log",
@@ -24,14 +24,14 @@ JSON, path given as the first argument (default `client-config.json`). Commit on
 | Field | Required | Rules |
 |---|---|---|
 | `clientId` | yes | Used only for local file names and logs. Never written to the DB or sent as a field. |
-| `scanIntervalHours` | yes | Number > 0; fractions allowed (0.5 = every 30 minutes). |
+| `scanIntervalMinutes` | yes | Number > 0; fractions allowed (0.5 = every 30 seconds). Minutes, so short demo intervals are easy to set (decided by Sam, 2026-10-28). |
 | `directories` | yes | At least one. Normalized and de-duplicated on load. |
 | `outputDir`, `logPath` | yes | Where snapshots and logs go. |
 | `api` | yes | Fields are the API team's (`API_PLACEHOLDER`). Secrets come from env vars or the OS store, never the file. |
 
 ## Schedule
 
-- Run one scan at startup, then one every `scanIntervalHours`, **measured from the start of each scan** so runs don't drift.
+- Run one scan at startup, then one every `scanIntervalMinutes`, **measured from the start of each scan** so runs don't drift.
 - If a scan takes longer than the interval, the next one starts right away.
 - A failed run is logged and never stops the schedule.
 
@@ -52,17 +52,25 @@ JSON, path given as the first argument (default `client-config.json`). Commit on
    - `FileNotFoundException` / `DirectoryNotFoundException` → `NOT_FOUND`
    - `IOException` with HResult low word 32 or 33 (sharing/lock violation) → `LOCKED`
    - Any other `IOException` → `UNREADABLE`
-7. Commit, close, log counts (hashed, errors).
+7. Commit, close, log counts (hashed, errors). If the scan fails before the commit, delete its incomplete DB file so it is never uploaded.
+
+## Local snapshot retention
+
+The client stays lightweight; the server does long-term storage (decided by Sam, 2026-10-28).
+
+- After each run (scan, then upload once the API exists), delete older snapshots in `outputDir`, keeping only the **2 newest** `scan_<clientId>_*.db` files: the current one and the one before it.
+- Order snapshots by the `<unixStart>` in the file name. Only touch files matching this client's pattern.
+- A failed delete is logged and never stops the schedule.
 
 ## Upload
 
 - Upload the snapshot DB to the server through the secure API (HTTPS only; refuse a non-HTTPS base URL).
 - Current placeholder: `POST /api/v1/scans`, multipart with `scanStartedAt` (Unix seconds) and `scanDb` (the file). **No client ID field**; the server takes identity from the credential. See `api-contract.md`.
-- Retry a few times with backoff on network errors; don't retry auth failures.
-- If upload ultimately fails, keep the snapshot for debugging but **don't re-send it later**: the next scan uploads newer data, and the server rejects scans older than one it has already merged.
+- Retry a few times with backoff only on network errors, timeouts and 5xx. Never retry a 4xx (400, 401/403, 409), and don't wait after the last attempt. See `api-contract.md`.
+- If upload ultimately fails, **don't re-send it later**: the next scan uploads newer data, and the server rejects scans older than one it has already merged. The snapshot stays on disk until retention removes it.
 
 ## Not the client's job
 
 - Diffing against earlier scans (the server does all of it).
-- Remembering previous scans.
+- Remembering previous scans, or keeping snapshots long term (see retention above).
 - Choosing the auth scheme or API routes.
