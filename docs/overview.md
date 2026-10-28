@@ -30,7 +30,8 @@ Detect files that have been tampered with or corrupted. Every monitored file get
 - SHA-256 computed by streaming the file.
 - Paths are normalized before storing, so the same file always gives the same string.
 - The client sends a **fresh full snapshot** each scan; the server does all diffing.
-- The client scans at startup and then every `scanIntervalHours` (from its config).
+- The client scans at startup and then every `scanIntervalMinutes` (from its config).
+- The client keeps at most 2 local snapshots; the server does long-term storage.
 - Unreadable files and folders are retried once after the full scan, then recorded with a fixed error code in place of the hash.
 - The shared `Data` table has **no client ID column**; the API tells the server which client is sending.
 - The server keeps **one SQLite DB per client ID**; an unseen client ID gets a new DB.

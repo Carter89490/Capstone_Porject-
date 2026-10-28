@@ -1,0 +1,12 @@
+{
+  "clientId": "demo-pc",
+  "scanIntervalMinutes": 5,
+  "directories": [ "C:\\Test" ],
+  "outputDir": "C:\\FIM\\scans",
+  "logPath": "C:\\FIM\\client.log",
+  "api": {
+    "baseUrl": "https://fim-server.example.edu",
+    "clientCertPath": "C:\\FIM\\client.pfx",
+    "apiKeyEnvVar": "FIM_API_KEY"
+  }
+}

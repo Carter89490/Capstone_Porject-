@@ -526,4 +526,4 @@ FUNCTION AddPortalAuthentication(services, portalSettings)    // API_PLACEHOLDER
 - **Client registration.** Who issues per-client keys/certs, and whether an unknown-but-authenticated client should get a DB automatically (current behavior).
 - **Portal data needs.** Endpoints in sections 7 and 8 are generic guesses until the UI/UX is designed. Per-user client visibility, report history, and report size limits are all open.
 - **Raw upload retention.** Uploaded DB files are deleted after merge; keep them if the team wants an audit trail.
-- **Scan interval** is set per client in its config (`scanIntervalHours`). Short intervals on large clients mean more uploads and faster growth of `Changes` and error rows; worth checking once real file counts are known.
+- **Scan interval** is set per client in its config (`scanIntervalMinutes`). Short intervals on large clients mean more uploads and faster growth of `Changes` and error rows; worth checking once real file counts are known.

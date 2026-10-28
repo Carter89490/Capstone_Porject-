@@ -14,6 +14,7 @@ Read before working on that area:
 - Anything touching the client/server boundary: `docs/api-contract.md`
 - Repo, build, and tooling setup: `docs/dev-setup.md`
 - What is still undecided: `docs/open-questions.md`
+- Ideas for later (don't implement until moved into a spec): `docs/potential-features.md`
 
 ## Rules for Claude
 

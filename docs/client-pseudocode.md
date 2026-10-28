@@ -7,6 +7,7 @@ Anything the team hasn't decided is marked `TODO(open-question)`. Anything the A
 
 - **Fresh snapshot DB per scan.** Each run writes a new local SQLite file with every file it hashed. The server does all diffing (new / changed / deleted), so the client stays simple and never needs to remember earlier scans.
 - **No client ID in the DB (decided by Sam, 2026-10-19).** The server keeps one DB per client and the API tells it which client is sending, so rows don't carry a client ID. That column is replaced by `fileSize`: the file's size in KiB, rounded up. The config's `clientId` is only used for local file names and logs.
+- **At most 2 local snapshots (decided by Sam, 2026-10-28).** After each run the client deletes older snapshot files, keeping the newest 2. The server does long-term storage.
 - **Locked or unreadable files get two tries (decided by Sam, 2026-10-19).** A file that fails during the main walk goes on a retry list. After every directory is hashed, the list is tried once more. A file that still fails is written to the DB with a fixed error code in `hash` instead of a hash, so the server can report the failed attempt. Folders work the same way: a folder that can't be listed is retried once, then recorded with its folder path and `DIR_UNREADABLE` (or `DIR_NOT_FOUND` for a missing root). Real hashes are always 64 hex characters, so a code can never be mistaken for one.
 
 ---
@@ -17,7 +18,7 @@ Anything the team hasn't decided is marked `TODO(open-question)`. Anything the A
 // client-config.json (example)
 {
   "clientId":    "lab-pc-07",              // local snapshot names and logs; the server gets the ID from the API
-  "scanIntervalHours": 6,                   // scan + upload every X hours (decided by Sam, 2026-10-19)
+  "scanIntervalMinutes": 360,               // scan + upload every X minutes (decided by Sam, 2026-10-28; was hours)
   "directories": [ "C:\\Data\\Important", "D:\\Records" ],
   "outputDir":   "C:\\ProgramData\\FIM\\scans",
   "logPath":     "C:\\ProgramData\\FIM\\client.log",
@@ -30,7 +31,7 @@ Anything the team hasn't decided is marked `TODO(open-question)`. Anything the A
 
 RECORD ClientConfig
     clientId     : string
-    scanIntervalHours : double              // > 0; fractions allowed (0.5 = every 30 min)
+    scanIntervalMinutes : double            // > 0; fractions allowed (0.5 = every 30 s)
     directories  : list<string>
     outputDir    : string
     logPath      : string
@@ -42,7 +43,7 @@ FUNCTION LoadConfig(path) -> ClientConfig
 
     IF IsBlank(config.clientId)          THEN FAIL "clientId is required"
     IF config.directories IS EMPTY       THEN FAIL "at least one directory is required"
-    IF config.scanIntervalHours <= 0     THEN FAIL "scanIntervalHours must be greater than 0"
+    IF config.scanIntervalMinutes <= 0     THEN FAIL "scanIntervalMinutes must be greater than 0"
 
     // Normalize and de-duplicate the roots so overlapping entries aren't scanned twice
     config.directories = Distinct( MAP config.directories USING NormalizePath )
@@ -57,10 +58,10 @@ FUNCTION Main(args)
     config     = LoadConfig(configPath)
     logger     = OpenLog(config.logPath)
 
-    // Scan + upload every scanIntervalHours (from the config). The first scan runs at startup.
+    // Scan + upload every scanIntervalMinutes (from the config). The first scan runs at startup.
     // Runs until the process is stopped; host it as a Windows Service or systemd service
     // so it starts with the machine.
-    interval = TimeSpan.FromHours(config.scanIntervalHours)
+    interval = TimeSpan.FromMinutes(config.scanIntervalMinutes)
     LOOP FOREVER
         started = Now()
         TRY
@@ -77,17 +78,33 @@ FUNCTION RunOnce(config, logger)
     scanStart = UnixTimeSecondsNow()
     dbPath    = Combine(config.outputDir, "scan_" + config.clientId + "_" + scanStart + ".db")
 
-    result = AWAIT ScanAllDirectories(config, dbPath, logger)
+    TRY
+        result = AWAIT ScanAllDirectories(config, dbPath, logger)
+    CATCH
+        // An incomplete snapshot must never be uploaded
+        TryDeleteFile(dbPath)
+        RETHROW
     logger.Info("Scan done: " + result.hashedCount + " hashed, " + result.errorCount + " recorded as errors")
 
     uploaded = AWAIT UploadScan(config, dbPath, scanStart, logger)
     IF uploaded THEN
         logger.Info("Upload succeeded")
-        // TODO(open-question): keep or delete local snapshots after a successful upload?
     ELSE
         // Don't re-send this snapshot later: the next scheduled scan uploads a newer one, and
-        // the server rejects a scan older than one it already merged. Kept only for debugging.
-        logger.Warn("Upload failed; snapshot kept at " + dbPath + ". Next scheduled scan will upload fresh data.")
+        // the server rejects a scan older than one it already merged.
+        logger.Warn("Upload failed; next scheduled scan will upload fresh data.")
+
+    PruneSnapshots(config, logger)
+
+// Keep only the newest 2 snapshots for this client; the server does long-term storage
+CONST SnapshotsToKeep = 2
+FUNCTION PruneSnapshots(config, logger)
+    files = FilesIn(config.outputDir, "scan_" + config.clientId + "_*.db")
+    files = SORT files DESCENDING BY the <unixStart> parsed from the name   // skip names that don't parse
+    FOR EACH old IN files SKIP SnapshotsToKeep
+        TRY DeleteFile(old)
+        CATCH (IOException, UnauthorizedAccessException) AS e
+            logger.Warn("Could not delete old snapshot " + old + " : " + e.Message)
 ```
 
 ## 3. Local SQLite database (shared schema)
@@ -325,5 +342,5 @@ FUNCTION ApiUploadScan(http, scanStart, dbPath) -> ApiResponse
 
 ## Open questions this pseudocode surfaces
 
-- **Retry and local retention.** How many upload retries, and whether to delete local snapshots after a successful upload.
+- **Upload retries.** How many upload retries. (Local retention is decided: keep the newest 2.)
 - **Upload format.** Whole SQLite file vs. JSON rows is the API team's call; the pseudocode assumes the whole file.

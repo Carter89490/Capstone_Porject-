@@ -14,10 +14,6 @@ Not decided. **Don't invent answers.** Ask the team, or leave `TODO(open-questio
 - **Client registration**: who issues per-client credentials, and whether an unknown but authenticated client should get a DB automatically (current behavior: yes).
 - Upload retry policy (client) and maximum upload size (server; placeholder 500 MB).
 
-## Client
-
-- Keep or delete local snapshots after a successful upload.
-
 ## Server
 
 - Keep raw uploaded DB files for an audit trail, or delete after merge (current: delete).

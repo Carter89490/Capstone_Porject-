@@ -15,7 +15,7 @@ ASP.NET Core app (`Server` project, minimal APIs) that receives client uploads, 
 - `index.db`: table `Clients(clientId PK, dbFile, firstSeen, lastUploadAt, lastScanStartedAt)`.
 - Per-client DB: `Data` (shared schema + `active`, see `data-model.md`), plus:
   - `Scans(scanId PK, scanStartedAt UNIQUE, receivedAt, fileCount, newCount, changedCount, deletedCount, unchangedCount, errorCount)`
-  - `Changes(changeId PK, scanId FK, changeType 'NEW'|'CHANGED'|'DELETED'|'ERROR', filePath, oldKey, newKey, oldHash, newHash)`, indexed on `scanId`
+  - `Changes(changeId PK, scanId FK, changeType 'NEW'|'CHANGED'|'DELETED'|'ERROR', filePath, oldKey, newKey, oldHash, newHash)`, indexed on `scanId` and `filePath`
 - WAL journal mode so portal reads don't block upload writes.
 - `clientId` becomes a file name, so it must match `^[A-Za-z0-9._-]{1,64}$` and not be `.` or `..`.
 
@@ -62,7 +62,7 @@ All read-only, all under `/api/v1/portal`, all require a logged-in portal user, 
 | `GET /clients/{clientId}/scans?from=&to=` | Scan list |
 | `GET /clients/{clientId}/scans/{scanId}/changes?type=` | Changes in one scan |
 | `GET /clients/{clientId}/files?pathPrefix=&includeInactive=` | Current (or all) rows |
-| `GET /clients/{clientId}/files/history?path=` | Every hash a file has had, with change type and scan time |
+| `GET /clients/{clientId}/files/history?path=` | A file's full timeline from the `Changes` log: every NEW, CHANGED, DELETED and ERROR event with its scan time and hashes |
 | `POST /reports` | Report over clients, time range, change types; JSON or CSV. POST only to carry filters; still read-only. |
 
 Unknown client ID → 404. Escape `%` and `_` in LIKE prefixes.
