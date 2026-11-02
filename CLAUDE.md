@@ -23,6 +23,7 @@ Read before working on that area:
 - **The secure API belongs to teammates.** Code against the contract in `docs/api-contract.md` and mark guesses with `API_PLACEHOLDER`. Don't redesign the auth scheme.
 - **Don't change the shared `Data` schema** (column names, types, units) or the error-code list without the whole team agreeing. Client, API, and server all depend on them.
 - **The portal UI/UX is not designed yet.** Mark portal guesses with `ASSUMPTION(portal-pending)` and keep portal endpoints generic.
+- **Keep `README.md`'s "Project status" current in the same change as the work.** When a feature is built, move it from **To do** to **Done**. When a question is answered, remove it from **Open questions** (and from `docs/open-questions.md`) and record the decision in the matching spec. Add new open questions and to-dos there as they come up. Also update any README diagram or table the change affects.
 
 ## Stack
 
