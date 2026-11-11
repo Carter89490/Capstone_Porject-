@@ -1,4 +1,4 @@
-# File Integrity Monitor (Senior Design)
+# FileGuard (Senior Design)
 
 An app that detects tampering or corruption of files. A **client** hashes files on each monitored machine and uploads the results to a **central server**. The server stores results per client, compares each upload with earlier ones, and serves reports to a web portal.
 
@@ -20,9 +20,9 @@ Read before working on that area:
 
 - **Follow the decisions in `docs/` exactly.** If a request conflicts with them, say so and point to the conflicting decision instead of silently changing the design.
 - **Don't invent answers to open questions** (`docs/open-questions.md`). Ask, or leave a `TODO(open-question)` comment in the code.
-- **The secure API belongs to teammates.** Code against the contract in `docs/api-contract.md` and mark guesses with `API_PLACEHOLDER`. Don't redesign the auth scheme.
-- **Don't change the shared `Data` schema** (column names, types, units) or the error-code list without the whole team agreeing. Client, API, and server all depend on them.
-- **The portal UI/UX is not designed yet.** Mark portal guesses with `ASSUMPTION(portal-pending)` and keep portal endpoints generic.
+- **Code against the API spec in `docs/api-contract.md` (v1).** Teammates implement the secure API. Don't change routes, payloads or the auth scheme without the whole team agreeing; if something the code needs isn't in the spec, mark it `API_PLACEHOLDER` and raise it.
+- **Don't change the shared `Data` schema** (column names, types, units), the scan `metadata` format, or the error-code list without the whole team agreeing. Client, API, and server all depend on them.
+- **The portal follows the prototype in `docs/web-portal-prototype.md`.** Mark anything beyond it with `ASSUMPTION(portal-pending)`.
 - **Keep `README.md`'s "Project status" current in the same change as the work.** When a feature is built, move it from **To do** to **Done**. When a question is answered, remove it from **Open questions** (and from `docs/open-questions.md`) and record the decision in the matching spec. Add new open questions and to-dos there as they come up. Also update any README diagram or table the change affects.
 
 ## Stack

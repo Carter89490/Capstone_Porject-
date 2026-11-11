@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FileGuard Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Ubuntu+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
+      </div>
+      <span class="brand-name">FileGuard</span>
+    </div>
+    <div class="user">
+      <span>Signed in as <strong>admin</strong></span>
+      <a href="index.html">Sign out</a>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Portal views">
+    <button class="tab" role="tab" id="tab-imports" aria-controls="panel-imports" aria-selected="true">Scan imports</button>
+    <button class="tab" role="tab" id="tab-tree" aria-controls="panel-tree" aria-selected="false" tabindex="-1">Client files</button>
+    <button class="tab" role="tab" id="tab-trends" aria-controls="panel-trends" aria-selected="false" tabindex="-1">Trends</button>
+  </nav>
+
+  <main>
+    <!-- ===== Tab 1: Scan imports ===== -->
+    <section class="panel" id="panel-imports" role="tabpanel" aria-labelledby="tab-imports">
+      <div class="panel-head">
+        <div>
+          <h2>Scan imports</h2>
+          <p>Each row is one client database upload. Click a row to see which paths failed.</p>
+        </div>
+        <div class="controls">
+          <label>Client <select id="imports-client"></select></label>
+          <button class="btn" id="imports-add">+ Add to report</button>
+        </div>
+      </div>
+      <div class="stats" id="imports-stats"></div>
+      <div class="card table-wrap">
+        <table id="imports-table">
+          <thead>
+            <tr>
+              <th></th><th>Client</th><th>Scan started</th><th>Duration</th>
+              <th class="num">Folders</th><th class="num">Files found</th><th class="num">Files hashed</th>
+              <th class="num">Failed</th><th class="num">New</th><th class="num">Changed</th><th class="num">Deleted</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== Tab 2: Client files tree ===== -->
+    <section class="panel" id="panel-tree" role="tabpanel" aria-labelledby="tab-tree" hidden>
+      <div class="panel-head">
+        <div>
+          <h2>Client files</h2>
+          <p>Expand folders on the left. Select a folder or file to see its details.</p>
+        </div>
+        <div class="controls">
+          <label>Client <select id="tree-client"></select></label>
+          <button class="btn secondary" id="tree-expand">Expand all</button>
+          <button class="btn" id="tree-add">+ Add selection to report</button>
+        </div>
+      </div>
+      <div class="tree-layout">
+        <div class="card tree-pane">
+          <div class="pane-title">Monitored folders</div>
+          <ul class="tree" id="tree" role="tree"></ul>
+        </div>
+        <div class="card detail-pane">
+          <div class="pane-title">Details</div>
+          <div class="inner" id="tree-detail"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Tab 3: Trends ===== -->
+    <section class="panel" id="panel-trends" role="tabpanel" aria-labelledby="tab-trends" hidden>
+      <div class="panel-head">
+        <div>
+          <h2>Trends</h2>
+          <p>Pick a measure and a client. Hover a point to see its value.</p>
+        </div>
+        <div class="controls">
+          <label>Measure
+            <select id="chart-metric">
+              <option value="filesFound">Files found per scan</option>
+              <option value="filesHashed">Files hashed per scan</option>
+              <option value="failed">Failed hashes per scan</option>
+              <option value="changed">Changed hashes per scan</option>
+              <option value="newFiles">New files per scan</option>
+              <option value="deleted">Deleted files per scan</option>
+            </select>
+          </label>
+          <label>Client <select id="chart-client"></select></label>
+          <button class="btn" id="chart-add">+ Add chart to report</button>
+        </div>
+      </div>
+      <div class="card chart-card">
+        <div class="chart-legend" id="chart-legend"></div>
+        <div id="chart"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== Report tray, always at the bottom ===== -->
+  <aside class="report-tray" aria-label="Report">
+    <div class="bar">
+      <span class="title">Report <span class="count" id="report-count">0</span></span>
+      <button class="btn ghost" id="report-toggle" aria-expanded="false">Show items</button>
+      <span class="spacer"></span>
+      <button class="btn ghost" id="report-clear">Clear</button>
+      <button class="btn big" id="report-export">Export report</button>
+    </div>
+    <div class="report-list" id="report-list" hidden></div>
+  </aside>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="modal-backdrop" id="export-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="export-title">
+      <div class="check" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </div>
+      <h3 id="export-title">Report exported!</h3>
+      <p id="export-text"></p>
+      <button class="btn" id="export-close">OK</button>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

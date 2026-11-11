@@ -197,10 +197,14 @@ C# Dev Kit gives Solution Explorer, IntelliSense, Test Explorer and debugging. S
 ### 11. Config files and secrets
 
 - [ ] Commit a **sample** client config (for example `Client/client-config.example.json`) with the directory list, client ID and scan interval (minutes), using fake values.
-- [ ] Each person copies it to their real config locally. Real configs, client keys and certs are **never** committed.
+- [ ] Each person copies it to their real config locally (or downloads one from the portal's **Deploy new agent**). Real configs, `agent.key` files, enrollment tokens, API keys and certs are **never** committed.
+- [ ] Commit a sample server config (`Server/server-config.example.json`) with fake paths and URL.
 - [ ] For the server, use `dotnet user-secrets` for anything secret during development:
   - `dotnet user-secrets init --project Server`
-  - `dotnet user-secrets set "SomeKey" "value" --project Server`
+  - `dotnet user-secrets set "FIM_ADMIN_PASSWORD" "<12+ chars>" --project Server` (creates the first portal admin)
+  - `dotnet user-secrets set "FIM_CERT_PASSWORD" "<password>" --project Server` (protects the server's HTTPS key, which the server creates on first start)
+- [ ] On the demo server, set the same two values as environment variables instead (user-secrets are for development only).
+- [ ] On each admin's computer, import the server's `server.cer` into *Trusted Root Certification Authorities* (double-click it → Install Certificate → Local Machine) so the portal opens without a certificate warning. Repeat after the server reissues its certificate.
 
 ### 12. Write it down: `README.md` (repo root)
 

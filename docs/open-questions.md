@@ -2,21 +2,19 @@
 
 Not decided. **Don't invent answers.** Ask the team, or leave `TODO(open-question)` in the code with a pointer to this list. When one is decided, move it into the matching spec file and delete it here.
 
-## Portal
+## Proposed in `api-contract.md` v1: confirm with the team
 
-- **Portal UI/UX**: layout, pages, and which reports are needed. This will decide what extra data the server keeps and which portal endpoints survive.
-- Should some portal users see only some clients?
-- Report history, report size limits, or streaming large reports.
+The API spec (2026-11-11) settles these. They stand unless the team (especially the API teammates) objects:
 
-## API (teammates)
+- Agents authenticate with a per-client **API key** (Bearer header), not client certificates.
+- **Enrollment:** Deploy new agent issues a one-time token (24 h); the client swaps it for its key and stores it with DPAPI.
+- Upload is the **whole snapshot file plus a JSON `metadata` part**; max 500 MiB.
+- Client upload retries: 3 attempts, 5 s then 30 s, 10-minute timeout each.
+- Portal login: username + password, session cookie, 5 failed logins → 15-minute lock. Roles `admin` and `viewer`; **every user sees every client**.
+- Report export is a self-contained **HTML** file (print to PDF from the browser) plus a CSV change list. Reports are **not stored** on the server.
+- Clients are **revoked, never deleted**; users are disabled, never deleted.
+- The server's HTTPS certificate is **self-signed and created by the server**; clients trust it by **public-key pinning**.
 
-- Key vs. certificate, header names, upload format (whole DB file vs. JSON rows).
-- **Client registration**: who issues per-client credentials, and whether an unknown but authenticated client should get a DB automatically (current behavior: yes).
-- Upload retry policy (client) and maximum upload size (server; placeholder 500 MB).
+## Still open
 
-## Server
-
-- Keep raw uploaded DB files for an audit trail, or delete after merge (current: delete).
-- Out-of-order uploads are rejected with 409; team to confirm.
-- Deleted vs. superseded both use `active = 0` and are told apart by the `Changes` log. If the portal needs it without the log, that would take another column.
-- Effect of short scan intervals on DB growth for large clients, once real file counts are known.
+Nothing else right now.
