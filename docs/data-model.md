@@ -13,7 +13,9 @@ Shared by client, API, and server. Don't rename, retype, or change the units of 
 | `hashDate` | INTEGER | ✓ | ✓ | **Unix time in seconds** when the hash (or failed attempt) was taken. |
 | `active` | INTEGER | | ✓ | Server only. `1` = current hash for this path, `0` = superseded, deleted, or an error row. |
 
-There is **no `clientId` column**. The server keeps one DB per client and learns the client's identity from the API.
+There is **no `clientId` column**. The server keeps one DB per client and learns the client's identity from the API key.
+
+Per-scan facts that aren't per-file (start and finish time, folders scanned, the agent's hostname, OS, version, interval and folders) are **not** in the snapshot. They travel next to it as the upload's `metadata` part; see `api-contract.md`.
 
 ### Client DDL
 

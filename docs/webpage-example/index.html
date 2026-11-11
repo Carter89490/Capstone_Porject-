@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FileGuard Portal - Sign in</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Ubuntu+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="login-page">
+  <!-- PROTOTYPE: the form does not check credentials. Pressing "Sign in" goes straight to home.html. -->
+  <form class="login-card" action="home.html" method="get" id="login-form" autocomplete="off">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
+      </div>
+      <span class="brand-name">FileGuard</span>
+    </div>
+    <p class="sub">File integrity monitoring portal. Sign in to view client scans and build reports.</p>
+
+    <label class="field">
+      <span>Username</span>
+      <input type="text" name="username" placeholder="e.g. admin" autocomplete="off">
+    </label>
+    <label class="field">
+      <span>Password</span>
+      <input type="password" name="password" placeholder="••••••••" autocomplete="off">
+    </label>
+
+    <button class="btn big" type="submit">Sign in</button>
+    <p class="proto-note">Prototype only: any username and password (or none) will sign you in.</p>
+  </form>
+
+  <script>
+    // Do not send the typed values anywhere, not even in the URL. Just open the home page.
+    document.getElementById("login-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      window.location.href = "home.html";
+    });
+  </script>
+</body>
+</html>
